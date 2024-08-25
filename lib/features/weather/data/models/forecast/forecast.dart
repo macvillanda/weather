@@ -1,29 +1,50 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'dart:convert';
 
-import 'current.dart';
-import 'current_units.dart';
-import 'daily.dart';
-import 'daily_units.dart';
+import 'package:built_value/built_value.dart';
+import 'package:built_value/serializer.dart';
+import 'package:weather/core/helpers/serializers.dart';
+import 'package:weather/features/weather/data/models/forecast/current.dart';
+import 'package:weather/features/weather/data/models/forecast/current_units.dart';
+import 'package:weather/features/weather/data/models/forecast/daily.dart';
+import 'package:weather/features/weather/data/models/forecast/daily_units.dart';
 
-part 'forecast.freezed.dart';
 part 'forecast.g.dart';
 
-@freezed
-class Forecast with _$Forecast {
-  factory Forecast({
-    double? latitude,
-    double? longitude,
-    @JsonKey(name: 'generationtime_ms') double? generationtimeMs,
-    @JsonKey(name: 'utc_offset_seconds') int? utcOffsetSeconds,
-    String? timezone,
-    @JsonKey(name: 'timezone_abbreviation') String? timezoneAbbreviation,
-    int? elevation,
-    @JsonKey(name: 'current_units') CurrentUnits? currentUnits,
-    Current? current,
-    @JsonKey(name: 'daily_units') DailyUnits? dailyUnits,
-    Daily? daily,
-  }) = _Forecast;
+abstract class Forecast implements Built<Forecast, ForecastBuilder> {
+  Forecast._();
 
-  factory Forecast.fromJson(Map<String, dynamic> json) =>
-      _$ForecastFromJson(json);
+  factory Forecast([Function(ForecastBuilder b) updates]) = _$Forecast;
+
+  @BuiltValueField(wireName: 'latitude')
+  double get latitude;
+  @BuiltValueField(wireName: 'longitude')
+  double get longitude;
+  @BuiltValueField(wireName: 'generationtime_ms')
+  double get generationtimeMs;
+  @BuiltValueField(wireName: 'utc_offset_seconds')
+  double get utcOffsetSeconds;
+  @BuiltValueField(wireName: 'timezone')
+  String get timezone;
+  @BuiltValueField(wireName: 'timezone_abbreviation')
+  String get timezoneAbbreviation;
+  @BuiltValueField(wireName: 'elevation')
+  double get elevation;
+  @BuiltValueField(wireName: 'current_units')
+  CurrentUnits get currentUnits;
+  @BuiltValueField(wireName: 'current')
+  Current get current;
+  @BuiltValueField(wireName: 'daily_units')
+  DailyUnits get dailyUnits;
+  @BuiltValueField(wireName: 'daily')
+  Daily get daily;
+  String toJson() {
+    return json.encode(serializers.serializeWith(Forecast.serializer, this));
+  }
+
+  static Forecast? fromJson(String jsonString) {
+    return serializers.deserializeWith(
+        Forecast.serializer, json.decode(jsonString));
+  }
+
+  static Serializer<Forecast> get serializer => _$forecastSerializer;
 }

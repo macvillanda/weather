@@ -1,16 +1,30 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'dart:convert';
 
-part 'daily_units.freezed.dart';
+import 'package:built_value/built_value.dart';
+import 'package:built_value/serializer.dart';
+import 'package:weather/core/helpers/serializers.dart';
+
 part 'daily_units.g.dart';
 
-@freezed
-class DailyUnits with _$DailyUnits {
-  factory DailyUnits({
-    String? time,
-    @JsonKey(name: 'weather_code') String? weatherCode,
-    @JsonKey(name: 'apparent_temperature_max') String? apparentTemperatureMax,
-  }) = _DailyUnits;
+abstract class DailyUnits implements Built<DailyUnits, DailyUnitsBuilder> {
+  DailyUnits._();
 
-  factory DailyUnits.fromJson(Map<String, dynamic> json) =>
-      _$DailyUnitsFromJson(json);
+  factory DailyUnits([Function(DailyUnitsBuilder b) updates]) = _$DailyUnits;
+
+  @BuiltValueField(wireName: 'time')
+  String get time;
+  @BuiltValueField(wireName: 'weather_code')
+  String get weatherCode;
+  @BuiltValueField(wireName: 'apparent_temperature_max')
+  String get apparentTemperatureMax;
+  String toJson() {
+    return json.encode(serializers.serializeWith(DailyUnits.serializer, this));
+  }
+
+  static DailyUnits? fromJson(String jsonString) {
+    return serializers.deserializeWith(
+        DailyUnits.serializer, json.decode(jsonString));
+  }
+
+  static Serializer<DailyUnits> get serializer => _$dailyUnitsSerializer;
 }

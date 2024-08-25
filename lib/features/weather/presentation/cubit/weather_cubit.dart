@@ -108,8 +108,8 @@ class WeatherCubit extends Cubit<WeatherState> {
     final item = LocationEntity(
       name: currentForecast.name,
       location2d: Location2D(
-          latitude: currentForecast.forecast.latitude ?? 0,
-          longitude: currentForecast.forecast.longitude ?? 0),
+          latitude: currentForecast.forecast.latitude,
+          longitude: currentForecast.forecast.longitude),
       id: "0",
     );
     await _updateUseCase?.call(

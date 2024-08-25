@@ -18,7 +18,7 @@ class ForecastGetUseCase implements UseCase<ResultForecast, ForecastRequest> {
           requestParam.location, requestParam.others, true);
       return result;
     } catch (e) {
-      return Future.error(Error(exception: (e as Error).exception));
+      return Future.error(Error(exception: Exception(e.toString())));
     }
   }
 }

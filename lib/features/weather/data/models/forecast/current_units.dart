@@ -1,17 +1,35 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'dart:convert';
 
-part 'current_units.freezed.dart';
+import 'package:built_value/built_value.dart';
+import 'package:built_value/serializer.dart';
+import 'package:weather/core/helpers/serializers.dart';
+
 part 'current_units.g.dart';
 
-@freezed
-class CurrentUnits with _$CurrentUnits {
-  factory CurrentUnits({
-    String? time,
-    String? interval,
-    @JsonKey(name: 'temperature_2m') String? temperature2m,
-    @JsonKey(name: 'weather_code') String? weatherCode,
-  }) = _CurrentUnits;
+abstract class CurrentUnits
+    implements Built<CurrentUnits, CurrentUnitsBuilder> {
+  CurrentUnits._();
 
-  factory CurrentUnits.fromJson(Map<String, dynamic> json) =>
-      _$CurrentUnitsFromJson(json);
+  factory CurrentUnits([Function(CurrentUnitsBuilder b) updates]) =
+      _$CurrentUnits;
+
+  @BuiltValueField(wireName: 'time')
+  String get time;
+  @BuiltValueField(wireName: 'interval')
+  String get interval;
+  @BuiltValueField(wireName: 'temperature_2m')
+  String get temperature2m;
+  @BuiltValueField(wireName: 'weather_code')
+  String get weatherCode;
+  String toJson() {
+    return json
+        .encode(serializers.serializeWith(CurrentUnits.serializer, this));
+  }
+
+  static CurrentUnits? fromJson(String jsonString) {
+    return serializers.deserializeWith(
+        CurrentUnits.serializer, json.decode(jsonString));
+  }
+
+  static Serializer<CurrentUnits> get serializer => _$currentUnitsSerializer;
 }

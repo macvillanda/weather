@@ -44,7 +44,7 @@ class ForecastRepositoryImpl implements ForecastRepository {
       return Success(data: forecasts);
     } catch (e) {
       log("ERROR: $e");
-      return Future.error(Error(exception: (e as Error).exception));
+      return Future.error(Error(exception: Exception(e.toString())));
     }
   }
 
@@ -80,18 +80,14 @@ class ForecastRepositoryImpl implements ForecastRepository {
           lastUsed: DateTime.now(),
         );
 
-        final localForecast = LocalForecast(
-            id: itemForecast.id,
-            name: itemForecast.name,
-            lastUsed: "${itemForecast.lastUsed.millisecondsSinceEpoch}",
-            forecast: itemForecast.forecast);
+        final localForecast = _createFrom(itemForecast);
         await saveForecast(localForecast);
         return Success(data: itemForecast);
       } else {
         return Future.error(Error(exception: Exception("Invalid data")));
       }
     } catch (e) {
-      return Future.error(Error(exception: (e as Error).exception));
+      return Future.error(Error(exception: Exception(e.toString())));
     }
   }
 
@@ -101,11 +97,7 @@ class ForecastRepositoryImpl implements ForecastRepository {
       final allforecast = await getAllForecasts();
       if (allforecast is Success<List<LocationForecast>>) {
         var allLocalForecast = allforecast.data.map((e) {
-          return LocalForecast(
-              id: e.id,
-              name: e.name,
-              lastUsed: "${e.lastUsed.millisecondsSinceEpoch}",
-              forecast: e.forecast);
+          return _createFrom(e);
         }).toList();
         allLocalForecast.add(forecast);
 
@@ -118,7 +110,7 @@ class ForecastRepositoryImpl implements ForecastRepository {
         return false;
       }
     } catch (e) {
-      return Future.error(Error(exception: (e as Error).exception));
+      return Future.error(Error(exception: Exception(e.toString())));
     }
   }
 
@@ -151,11 +143,7 @@ class ForecastRepositoryImpl implements ForecastRepository {
                 allForecastData[oldForecastIndex] = newLocal;
 
                 var allLocalForecast = allForecastData.map((e) {
-                  return LocalForecast(
-                      id: e.id,
-                      name: e.name,
-                      lastUsed: "${e.lastUsed.millisecondsSinceEpoch}",
-                      forecast: e.forecast);
+                  return _createFrom(e);
                 }).toList();
                 final json = jsonEncode(
                     allLocalForecast.map((e) => e.toJson()).toList());
@@ -170,7 +158,22 @@ class ForecastRepositoryImpl implements ForecastRepository {
       }
       return null;
     } catch (e) {
-      return Future.error(Error(exception: (e as Error).exception));
+      return Future.error(Error(exception: Exception(e.toString())));
     }
   }
+
+  LocalForecast _createFrom(LocationForecast item) {
+    final jsonMap = {
+      "id": item.id,
+      "name": item.name,
+      "lastUsed": "${item.lastUsed.millisecondsSinceEpoch}",
+      "forecast": item.forecast
+    };
+    final jsonString = jsonEncode(jsonMap)
+        .replaceAll('\\"', '"')
+        .replaceAll('"forecast":"', '"forecast":')
+        .replaceAll('}}"}', '}}}');
+    return LocalForecast.fromJson(jsonString)!;
+  }
+
 }

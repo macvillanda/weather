@@ -13,7 +13,7 @@ class ForecastsGetAllUseCase implements UseCase<ResultListForecast, Null> {
       final result = await _repository.getAllForecasts();
       return result;
     } catch (e) {
-      return Future.error(Error(exception: (e as Error).exception));
+      return Future.error(Error(exception: Exception(e.toString())));
     }
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:page_indicator_plus/page_indicator_plus.dart';
 import 'package:weather/core/helpers/application_colors.dart';
 import 'package:weather/features/weather/domain/repositories/forecast_repository.dart';
 import 'package:weather/features/weather/presentation/cubit/weather_cubit.dart';
@@ -70,25 +70,25 @@ class _WeatherPageState extends State<WeatherPage> {
               return Weather(forecast: e);
             }).toList(),
           ),
+          (state.allForecasts.isNotEmpty)
+              ?
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
               margin: const EdgeInsets.only(bottom: 60),
-              child: SmoothPageIndicator(
+                    child: PageIndicator(
                 controller: _pageViewController,
                 count: state.allForecasts.length,
-                effect: SlideEffect(
-                  dotColor: Colors.white.withOpacity(0.3),
-                  activeDotColor: Colors.white,
-                ),
-                onDotClicked: (index) => _pageViewController.animateToPage(
-                  index,
-                  duration: const Duration(microseconds: 350),
-                  curve: Curves.easeIn,
-                ),
-              ),
-            ),
-          ),
+                      size: 8,
+                      layout: PageIndicatorLayout.WARM,
+                      color: Colors.grey,
+                      activeColor: Colors.white,
+                      scale: 0.65,
+                      space: 10,
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
         ],
       ),
       floatingActionButton: Builder(
@@ -133,8 +133,8 @@ class _WeatherPageState extends State<WeatherPage> {
     if (index < state.allForecasts.length) {
       final forecast = state.allForecasts[index];
       final forecastTime = await _worldtime.timeByLocation(
-          latitude: forecast.forecast.latitude ?? 0,
-          longitude: forecast.forecast.longitude ?? 0);
+          latitude: forecast.forecast.latitude,
+          longitude: forecast.forecast.longitude);
       final hour = forecastTime.hour;
       final minute = forecastTime.minute;
       return ApplicationColors().gradientCycle(hour, minute);

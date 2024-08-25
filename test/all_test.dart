@@ -116,7 +116,7 @@ class ForecastRepositoryNoImpl extends ForecastRepository {
   final List<LocationForecast> _testForecasts = [];
 
   Forecast _sampleForecast() {
-    return Forecast.fromJson(json.decode(sampleForecast));
+    return Forecast.fromJson(sampleForecast)!;
   }
 
   @override
@@ -132,15 +132,24 @@ class ForecastRepositoryNoImpl extends ForecastRepository {
         name: "sample",
         lastUsed: DateTime.now(),
         forecast: _sampleForecast());
-    final localForecast = LocalForecast(
-      id: locForecast.id,
-      name: locForecast.name,
-      lastUsed: "${locForecast.lastUsed.millisecondsSinceEpoch}",
-      forecast: locForecast.forecast,
-    );
+    final localForecast = _createFrom(locForecast);
 
     await saveForecast(localForecast);
     return Success(data: locForecast);
+  }
+
+  LocalForecast _createFrom(LocationForecast item) {
+    final jsonMap = {
+      "id": item.id,
+      "name": item.name,
+      "lastUsed": "${item.lastUsed.millisecondsSinceEpoch}",
+      "forecast": item.forecast
+    };
+    final jsonString = jsonEncode(jsonMap)
+        .replaceAll('\\"', '"')
+        .replaceAll('"forecast":"', '"forecast":')
+        .replaceAll('}}"}', '}}}');
+    return LocalForecast.fromJson(jsonString)!;
   }
 
   @override
@@ -190,7 +199,7 @@ void main() {
 
     expect(find.byKey(const Key("daily_date")), findsNothing);
     expect(find.byKey(const Key("daily_temp")), findsNothing);
-    final daily = Daily.fromJson(json.decode(sampleDaily));
+    final daily = Daily.fromJson(sampleDaily);
 
     await tester.pumpWidget(wrapWidgetWithLocalizationApp(DailyWeather(
       daily: daily,
@@ -198,16 +207,16 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
 
     expect(find.byKey(const Key("daily_date")),
-        findsExactly(daily.time?.length ?? 0));
+        findsExactly(daily?.time.toList().length ?? 0));
     expect(find.byKey(const Key("daily_temp")),
-        findsExactly(daily.time?.length ?? 0));
+        findsExactly(daily?.time.toList().length ?? 0));
   });
 
   testWidgets('Weather test', (WidgetTester tester) async {
-    final forecast = Forecast.fromJson(json.decode(sampleForecast));
+    final forecast = Forecast.fromJson(sampleForecast);
 
     final locationForecast = LocationForecast(
-        id: "1", name: "test", lastUsed: DateTime.now(), forecast: forecast);
+        id: "1", name: "test", lastUsed: DateTime.now(), forecast: forecast!);
 
     await tester.pumpWidget(wrapWidgetWithLocalizationApp(Weather(
       forecast: locationForecast,
@@ -223,7 +232,7 @@ void main() {
 
     final Text txtTemp = tester.widget(find.byKey(const Key("weather_temp")));
     expect(txtTemp.data,
-        "${locationForecast.forecast.current?.temperature2m} ${locationForecast.forecast.currentUnits?.temperature2m}");
+        "${locationForecast.forecast.current.temperature2m} ${locationForecast.forecast.currentUnits.temperature2m}");
   });
 
   test('WeatherCubit', () async {

@@ -21,7 +21,7 @@ class Weather extends StatelessWidget {
               size: const Size.fromHeight(50),
             ),
             Lottie.asset(
-                'assets/lottie/${_weatherAsset.getWeatherAsset(forecast.forecast.current?.weatherCode ?? 0, forecast.forecast.current?.time ?? "")}'),
+                'assets/lottie/${_weatherAsset.getWeatherAsset((forecast.forecast.current.weatherCode).toInt(), forecast.forecast.current.time)}'),
             SizedBox.fromSize(
               size: const Size.fromHeight(12),
             ),
@@ -37,7 +37,7 @@ class Weather extends StatelessWidget {
               size: const Size.fromHeight(4),
             ),
             Text(
-              "${forecast.forecast.current?.temperature2m ?? 0} ${forecast.forecast.currentUnits?.temperature2m ?? ""}",
+              "${forecast.forecast.current.temperature2m} ${forecast.forecast.currentUnits.temperature2m}",
               key: const Key("weather_temp"),
               style: Theme.of(context)
                   .textTheme
