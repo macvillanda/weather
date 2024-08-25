@@ -1,0 +1,151 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:weather/core/helpers/application_colors.dart';
+import 'package:weather/features/weather/domain/repositories/forecast_repository.dart';
+import 'package:weather/features/weather/presentation/cubit/weather_cubit.dart';
+import 'package:weather/features/weather/presentation/cubit/weather_state.dart';
+import 'package:worldtime/worldtime.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:weather/features/weather/presentation/widgets/search/city_search_delegate.dart';
+import 'package:weather/features/weather/presentation/widgets/weather.dart';
+
+// ignore: must_be_immutable
+class WeatherPage extends StatefulWidget {
+  ForecastRepository? repository;
+  bool getLocation;
+  WeatherPage({super.key, this.repository, this.getLocation = true});
+
+  @override
+  State<WeatherPage> createState() => _WeatherPageState();
+}
+
+class _WeatherPageState extends State<WeatherPage> {
+  late PageController _pageViewController;
+
+  final _cubit = WeatherCubit();
+  var _currentSelectedPage = 0;
+  final dateFormat = DateFormat("yyyy-MM-dd'T'HH:mm");
+  final _worldtime = Worldtime();
+
+  @override
+  void initState() {
+    super.initState();
+    _pageViewController = PageController();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _pageViewController.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => _cubit
+        ..setDependecies(widget.repository, widget.getLocation)
+        ..getAll(),
+      child: BlocBuilder<WeatherCubit, WeatherState>(builder: (context, state) {
+        return _body(state);
+      }),
+    );
+  }
+
+  Widget _body(WeatherState state) {
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: Stack(
+        alignment: Alignment.center,
+        children: [
+          _getAsyncBG(_currentSelectedPage, state),
+          PageView(
+            controller: _pageViewController,
+            onPageChanged: _handlePageViewChanged,
+            children: state.allForecasts.map((e) {
+              return Weather(forecast: e);
+            }).toList(),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 60),
+              child: SmoothPageIndicator(
+                controller: _pageViewController,
+                count: state.allForecasts.length,
+                effect: SlideEffect(
+                  dotColor: Colors.white.withOpacity(0.3),
+                  activeDotColor: Colors.white,
+                ),
+                onDotClicked: (index) => _pageViewController.animateToPage(
+                  index,
+                  duration: const Duration(microseconds: 350),
+                  curve: Curves.easeIn,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: Builder(
+        builder: (context) => FloatingActionButton(
+          child: const Icon(Icons.add_location_alt_sharp),
+          onPressed: () async {
+            final selectedCity = await showSearch(
+              context: context,
+              delegate: CitySearchDelegate(),
+            );
+            if (selectedCity != null) {
+              await _cubit.addNewLocation(selectedCity);
+              _pageViewController.animateToPage(
+                _cubit.state.allForecasts.length,
+                duration: const Duration(microseconds: 350),
+                curve: Curves.easeIn,
+              );
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _getAsyncBG(int index, WeatherState state) {
+    return FutureBuilder(
+      future: _getGradientFor(index, state),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return Container(
+              decoration: BoxDecoration(
+            gradient: (snapshot.data as LinearGradient),
+          ));
+        } else {
+          return Container();
+        }
+      },
+    );
+  }
+
+  Future<LinearGradient?> _getGradientFor(int index, WeatherState state) async {
+    if (index < state.allForecasts.length) {
+      final forecast = state.allForecasts[index];
+      final forecastTime = await _worldtime.timeByLocation(
+          latitude: forecast.forecast.latitude ?? 0,
+          longitude: forecast.forecast.longitude ?? 0);
+      final hour = forecastTime.hour;
+      final minute = forecastTime.minute;
+      return ApplicationColors().gradientCycle(hour, minute);
+    }
+    return null;
+  }
+
+  void _handlePageViewChanged(int currentPageIndex) {
+    setState(() {
+      _currentSelectedPage = currentPageIndex;
+    });
+    _cubit.didChangePageIndex(currentPageIndex);
+  }
+}
