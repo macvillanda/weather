@@ -16,7 +16,10 @@ class ForecastUpdateUseCase
     }
     try {
       final result = await _repository.updateForecast(
-          requestParam.location, requestParam.others);
+        requestParam.location,
+        requestParam.others,
+        requestParam.lastUpdated,
+      );
       return result;
     } catch (e) {
       return Future.error(Error(exception: Exception(e.toString())));

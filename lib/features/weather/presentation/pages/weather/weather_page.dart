@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:page_indicator_plus/page_indicator_plus.dart';
 import 'package:weather/core/helpers/application_colors.dart';
+import 'package:weather/features/weather/domain/entities/location_forecast.dart';
 import 'package:weather/features/weather/domain/repositories/forecast_repository.dart';
 import 'package:weather/features/weather/presentation/cubit/weather_cubit.dart';
 import 'package:weather/features/weather/presentation/cubit/weather_state.dart';
@@ -67,7 +68,7 @@ class _WeatherPageState extends State<WeatherPage> {
             controller: _pageViewController,
             onPageChanged: _handlePageViewChanged,
             children: state.allForecasts.map((e) {
-              return Weather(forecast: e);
+              return Weather(forecast: LocationForecast.from(e));
             }).toList(),
           ),
           (state.allForecasts.isNotEmpty)

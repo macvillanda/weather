@@ -13,6 +13,10 @@ Serializers _$serializers = (new Serializers().toBuilder()
       ..add(DailyUnits.serializer)
       ..add(Forecast.serializer)
       ..add(LocalForecast.serializer)
+      ..add(WeatherState.serializer)
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(LocalForecast)]),
+          () => new ListBuilder<LocalForecast>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(String)]),
           () => new ListBuilder<String>())

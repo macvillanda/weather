@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:weather/core/helpers/geo_locator.dart';
 import 'package:weather/core/helpers/result.dart';
 import 'package:weather/core/helpers/weather_asset_map.dart';
@@ -166,7 +168,8 @@ class ForecastRepositoryNoImpl extends ForecastRepository {
 
   @override
   Future<ResultForecast?> updateForecast(
-      LocationEntity location, Map<String, List<String>> others) async {
+      LocationEntity location,
+      Map<String, List<String>> others, DateTime lastUpdated) async {
     final locForecast = LocationForecast(
         id: "2",
         name: "sample",
@@ -177,8 +180,28 @@ class ForecastRepositoryNoImpl extends ForecastRepository {
   }
 }
 
+class MockStorage implements Storage {
+  @override
+  Future<void> clear() async {}
+
+  @override
+  Future<void> close() async {}
+
+  @override
+  Future<void> delete(String key) async {}
+
+  @override
+  dynamic read(String key) {
+    return "";
+  }
+
+  @override
+  Future<void> write(String key, value) async {}
+}
+
 void main() {
-  setUpAll(() {
+  setUpAll(() async {
+    HydratedBloc.storage = MockStorage();
     getIt.registerSingleton<Dio>(Dio());
     getIt.registerSingleton<GeoLocator>(GeoLocator());
     getIt.registerSingleton<SharedPreferenceStorage>(SharedPreferenceStorage());
@@ -239,11 +262,6 @@ void main() {
     final cubit = WeatherCubit();
     cubit.setDependecies(ForecastRepositoryNoImpl(), false);
     await cubit.getAll();
-    // should be zero since it will call the getall again after adding the
-    // location item
-    expect(cubit.state.allForecasts.length, equals(0));
-    // we already have added the initial item
-    await cubit.getAll();
     expect(cubit.state.allForecasts.length, equals(1));
     await cubit.addNewLocation(CitySearch(
         name: "sample",
@@ -251,6 +269,8 @@ void main() {
         id: "3",
         country: "Philippines",
         flag: ""));
+    expect(cubit.state.allForecasts.length, equals(2));
+    await cubit.didChangePageIndex(0);
     expect(cubit.state.allForecasts.length, equals(2));
   });
 

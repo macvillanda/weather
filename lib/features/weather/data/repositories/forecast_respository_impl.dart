@@ -33,13 +33,7 @@ class ForecastRepositoryImpl implements ForecastRepository {
           jsonArray.map((e) => LocalForecast.fromJson(e)));
 
       List<LocationForecast> forecasts = localForecasts.map((local) {
-        return LocationForecast(
-          forecast: local.forecast,
-          name: local.name,
-          id: local.id,
-          lastUsed:
-              DateTime.fromMillisecondsSinceEpoch(int.parse(local.lastUsed)),
-        );
+        return LocationForecast.from(local);
       }).toList();
       return Success(data: forecasts);
     } catch (e) {
@@ -52,7 +46,7 @@ class ForecastRepositoryImpl implements ForecastRepository {
   Future<ResultForecast> getForecast(LocationEntity location,
       Map<String, List<String>> others, bool checkCache) async {
     try {
-      final allforecast = await getAllForecasts();
+      /*final allforecast = await getAllForecasts();
       if (allforecast is Success<List<LocationForecast>>) {
         final savedForecast = allforecast.data
             .firstWhereOrNull((element) => element.id == location.id);
@@ -69,7 +63,7 @@ class ForecastRepositoryImpl implements ForecastRepository {
             return Success(data: itemForecast);
           }
         }
-      }
+      }*/
 
       final forecast = await _apiService.getForecast(location, others);
       if (forecast is Success<Forecast>) {
@@ -80,8 +74,8 @@ class ForecastRepositoryImpl implements ForecastRepository {
           lastUsed: DateTime.now(),
         );
 
-        final localForecast = _createFrom(itemForecast);
-        await saveForecast(localForecast);
+        //final localForecast = _createFrom(itemForecast);
+        //await saveForecast(localForecast);
         return Success(data: itemForecast);
       } else {
         return Future.error(Error(exception: Exception("Invalid data")));
@@ -116,44 +110,20 @@ class ForecastRepositoryImpl implements ForecastRepository {
 
   @override
   Future<ResultForecast?> updateForecast(
-      LocationEntity location, Map<String, List<String>> others) async {
+      LocationEntity location,
+      Map<String, List<String>> others, DateTime lastUsed) async {
     try {
-      final allforecast = await getAllForecasts();
-      if (allforecast is Success<List<LocationForecast>>) {
-        final forecast = allforecast.data.firstWhereOrNull((elem) {
-          return elem.id == location.id;
-        });
-        if (forecast != null) {
-          final lastSaved = forecast.lastUsed;
-          Duration difference = DateTime.now().difference(lastSaved);
-          if (difference.inMinutes > cacheLifeTime) {
-            final newForecast = await _apiService.getForecast(location, others);
-            if (newForecast is Success<Forecast>) {
-              final oldForecastIndex = allforecast.data.indexWhere((elem) {
-                return elem.id == location.id;
-              });
-              if (oldForecastIndex >= 0) {
-                final allForecastData = allforecast.data;
-                final newForecastData = newForecast.data;
-                final newLocal = LocationForecast(
-                    id: location.id,
-                    name: location.name,
-                    lastUsed: DateTime.now(),
-                    forecast: newForecastData);
-                allForecastData[oldForecastIndex] = newLocal;
 
-                var allLocalForecast = allForecastData.map((e) {
-                  return _createFrom(e);
-                }).toList();
-                final json = jsonEncode(
-                    allLocalForecast.map((e) => e.toJson()).toList());
-                _localStorage.save(StorageKeys.forecasts, json);
-                return Success(data: newLocal);
-              }
-            }
-          } else {
-            return Success(data: forecast);
-          }
+      Duration difference = DateTime.now().difference(lastUsed);
+      if (difference.inMinutes > cacheLifeTime) {
+        final newForecast = await _apiService.getForecast(location, others);
+        if (newForecast is Success<Forecast>) {
+          return Success(
+              data: LocationForecast(
+                  id: location.id,
+                  name: location.name,
+                  lastUsed: DateTime.now(),
+                  forecast: newForecast.data));
         }
       }
       return null;

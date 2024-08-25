@@ -5,6 +5,11 @@ typedef MapList = Map<String, List<String>>;
 class ForecastRequest {
   final LocationEntity location;
   final MapList others;
+  final DateTime lastUpdated;
 
-  ForecastRequest({required this.location, required this.others});
+  ForecastRequest({
+    required this.location,
+    required this.others,
+    required this.lastUpdated,
+  });
 }

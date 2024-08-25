@@ -12,5 +12,6 @@ abstract class ForecastRepository {
       Map<String, List<String>> others, bool checkCache);
   Future<bool> saveForecast(LocalForecast forecast);
   Future<ResultForecast?> updateForecast(
-      LocationEntity location, Map<String, List<String>> others);
+      LocationEntity location,
+      Map<String, List<String>> others, DateTime lastUsed);
 }

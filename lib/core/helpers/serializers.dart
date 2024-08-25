@@ -7,6 +7,7 @@ import 'package:weather/features/weather/data/models/forecast/daily.dart';
 import 'package:weather/features/weather/data/models/forecast/daily_units.dart';
 import 'package:weather/features/weather/data/models/forecast/forecast.dart';
 import 'package:weather/features/weather/data/models/forecast/local_forecast.dart';
+import 'package:weather/features/weather/presentation/cubit/weather_state.dart';
 
 part 'serializers.g.dart';
 
@@ -17,6 +18,7 @@ part 'serializers.g.dart';
   Current,
   CurrentUnits,
   LocalForecast,
+  WeatherState,
 ])
 final Serializers serializers =
     (_$serializers.toBuilder()..addPlugin(StandardJsonPlugin())).build();
